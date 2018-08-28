@@ -10,6 +10,9 @@ ws2.wasm: main.go
 
 build-server: cmd/serve/serve
 
+all-serve: cmd/serve/serve ws2.wasm
+		./cmd/serve/serve
+
 serve: build-server
 		./cmd/serve/serve
 

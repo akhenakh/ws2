@@ -46,7 +46,6 @@ func geoJSONToCells(i []js.Value) {
 	var f geojson.Feature
 
 	b := js.ValueOf(i[0]).String()
-	println("geoJSONToCells", b)
 	err := json.Unmarshal([]byte(b), &f)
 	if err != nil {
 		println(err.Error())
@@ -81,7 +80,6 @@ func drawCells(i []js.Value) {
 	}
 	b := s2tools.CellUnionToGeoJSON(cells)
 	js.Global().Set("data", string(b))
-	println(string(b))
 }
 
 func registerCallbacks() {
