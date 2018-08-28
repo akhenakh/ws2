@@ -19,6 +19,8 @@
    integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
    crossorigin=""></script>
 	<script src="https://unpkg.com/leaflet.pm@latest/dist/leaflet.pm.min.js"></script>
+	<script src ="togeojson.js"></script>
+	<script src ="leaflet.filelayer.js"></script>
 	<script src="wasm_exec.js"></script>
 
 	<div class="container">
@@ -28,8 +30,8 @@
 			<div class="col-md-2">
 				<div class="form-group">
 					<label for="minRange">Minimum Level</label>
-					<output name="minOutputName" id="minOutputId">12</output>
-					<input type="range" class="custom-range" min="1" max="30" value="12" id="minRange" oninput="minOutputId.value = minRange.value">
+					<output name="minOutputName" id="minOutputId">10</output>
+					<input type="range" class="custom-range" min="1" max="30" value="10" id="minRange" oninput="minOutputId.value = minRange.value">
 					
 					<label for="maxRange">Maximum Level</label>
 					<output name="maxOutputName" id="maxOutputId">20</output>
@@ -42,19 +44,34 @@
 				</div>
 				<button onClick="onClick()" id="runButton" disabled>Compute</button>
 			</div>
-		  </div>
+		</div>
+		<div class="row" id="cell_list">
+
+		</div>
 	</div>
 	
 	
 
 	<script>
+		var geoLayer = null;
+		var shapeLayer = null;
+
 		function onClick() { 
 			d = JSON.parse(data); 
-			L.geoJSON(d, {
+			var res = [];
+			geoLayer = L.geoJSON(d, {
 				style: function(feature) {
-					return {color: "#ff0000"};
-       			}
+					return {color: "#ff0000", weight: 2, fillOpacity: 0.15};
+       			},
+				onEachFeature: function(feature, layer) {
+					if (feature.properties) {
+        				layer.bindPopup(feature.properties.id + "<br>" + feature.properties.uid + "<br>Level " + feature.properties.level);
+					}
+					res.push(feature.properties.id);
+				},
 			}).addTo(mymap);
+
+			document.getElementById("cell_list").innerHTML = res.join(", ");
 		}
 
 		if (!WebAssembly.instantiateStreaming) { // polyfill
@@ -87,7 +104,6 @@
 			}
 		};
 
-		
 		var mymap = L.map('mapid');
 		// create the tile layer with correct attribution
 		var osmUrl='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -112,16 +128,40 @@
 		// add leaflet.pm controls to the map
 		mymap.pm.addControls(options);
 
+		// upload control
+		upload = L.Control.fileLayerLoad();
+		upload.addTo(mymap);
+		
 		// listen to when drawing mode gets enabled
 		mymap.on('pm:drawstart', function(e) {
 			console.log("started new", e.shape);
+			if (geoLayer != null) {
+				mymap.removeLayer(geoLayer);
+			}
+			if (shapeLayer != null) {
+				mymap.removeLayer(shapeLayer);
+			}
 		});
 
 		// listen to when a new layer is created
 		mymap.on('pm:create', function(e) {
 			console.log("calling geocell", e.shape);
+			shapeLayer = e.layer;
 			geocell(JSON.stringify(e.layer.toGeoJSON()));
 		});
+
+		upload.loader.on('data:loaded', function (event) {
+			if (geoLayer != null) {
+				mymap.removeLayer(geoLayer);
+			}
+			if (shapeLayer != null) {
+				mymap.removeLayer(shapeLayer);
+			}
+			shapeLayer = event.layer;
+			geofeaturescell(JSON.stringify(event.layer.toGeoJSON()));
+			layerswitcher.addOverlay(event.layer, event.filename);
+   		});
+		
 	</script>
 </body>
 </html>
