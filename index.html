@@ -55,23 +55,18 @@
 	<script>
 		var geoLayer = null;
 		var shapeLayer = null;
+		
 
-		function onClick() { 
-			d = JSON.parse(data); 
-			var res = [];
-			geoLayer = L.geoJSON(d, {
-				style: function(feature) {
-					return {color: "#ff0000", weight: 2, fillOpacity: 0.15};
-       			},
-				onEachFeature: function(feature, layer) {
-					if (feature.properties) {
-        				layer.bindPopup(feature.properties.id + "<br>" + feature.properties.uid + "<br>Level " + feature.properties.level);
-					}
-					res.push(feature.properties.id);
-				},
-			}).addTo(mymap);
-
-			document.getElementById("cell_list").innerHTML = res.join(", ");
+		function onClick() {
+			if (geoLayer != null) {
+				mymap.removeLayer(geoLayer);
+			}
+			gj = shapeLayer.toGeoJSON();
+			if (gj.type == "Feature") {
+				geocell(JSON.stringify(shapeLayer.toGeoJSON(gj)));
+			} else {
+				geofeaturescell(JSON.stringify(shapeLayer.toGeoJSON(gj)));
+			}			
 		}
 
 		if (!WebAssembly.instantiateStreaming) { // polyfill
@@ -95,14 +90,6 @@
 			await go.run(inst);
 			inst = await WebAssembly.instantiate(mod, go.importObject); // reset instance
 		}
-
-		var watched = {
-			mydata: "",
-			set data(x) {
-				this.mydata = x;
-				console.log("set data", x)
-			}
-		};
 
 		var mymap = L.map('mapid');
 		// create the tile layer with correct attribution
@@ -145,22 +132,37 @@
 
 		// listen to when a new layer is created
 		mymap.on('pm:create', function(e) {
-			console.log("calling geocell", e.shape);
 			shapeLayer = e.layer;
-			geocell(JSON.stringify(e.layer.toGeoJSON()));
 		});
 
-		upload.loader.on('data:loaded', function (event) {
+		upload.loader.on('data:loaded', function (e) {
 			if (geoLayer != null) {
 				mymap.removeLayer(geoLayer);
 			}
 			if (shapeLayer != null) {
 				mymap.removeLayer(shapeLayer);
 			}
-			shapeLayer = event.layer;
-			geofeaturescell(JSON.stringify(event.layer.toGeoJSON()));
-			layerswitcher.addOverlay(event.layer, event.filename);
+			shapeLayer = e.layer;
+			layerswitcher.addOverlay(e.layer, e.filename);
    		});
+
+		var updateui = function() {
+			d = JSON.parse(data); 
+			var res = [];
+			geoLayer = L.geoJSON(d, {
+				style: function(feature) {
+					return {color: "#ff0000", weight: 2, fillOpacity: 0.15};
+       			},
+				onEachFeature: function(feature, layer) {
+					if (feature.properties) {
+        				layer.bindPopup(feature.properties.id + "<br>" + feature.properties.uid + "<br>Level " + feature.properties.level);
+					}
+					res.push(feature.properties.id);
+				},
+			}).addTo(mymap);
+
+			document.getElementById("cell_list").innerHTML = res.join(", ");
+		}
 		
 	</script>
 </body>
