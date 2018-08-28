@@ -41,6 +41,7 @@ func getCoverParams() (minLevel, maxLevel, maxCells int) {
 
 	return minLevel, maxLevel, maxCells
 }
+
 func geoFeaturesJSONToCells(i []js.Value) {
 	var fc geojson.FeatureCollection
 	b := js.ValueOf(i[0]).String()
@@ -56,7 +57,20 @@ func geoFeaturesJSONToCells(i []js.Value) {
 	}
 
 	jsonb := s2tools.CellUnionToGeoJSON(res)
-	js.Global().Set("data", string(jsonb))
+	updateUIWithData(string(jsonb))
+}
+
+func geoJSONToCells(i []js.Value) {
+	var f geojson.Feature
+	b := js.ValueOf(i[0]).String()
+	err := json.Unmarshal([]byte(b), &f)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	cu := computeFeatureCells(&f)
+	jsonb := s2tools.CellUnionToGeoJSON(cu)
+	updateUIWithData(string(jsonb))
 }
 
 func computeFeatureCells(f *geojson.Feature) s2.CellUnion {
@@ -78,19 +92,6 @@ func computeFeatureCells(f *geojson.Feature) s2.CellUnion {
 	return cu
 }
 
-func geoJSONToCells(i []js.Value) {
-	var f geojson.Feature
-	b := js.ValueOf(i[0]).String()
-	err := json.Unmarshal([]byte(b), &f)
-	if err != nil {
-		println(err.Error())
-		return
-	}
-	cu := computeFeatureCells(&f)
-	jsonb := s2tools.CellUnionToGeoJSON(cu)
-	js.Global().Set("data", string(jsonb))
-}
-
 func drawCells(i []js.Value) {
 	var cells s2.CellUnion
 	for _, cs := range i {
@@ -98,7 +99,12 @@ func drawCells(i []js.Value) {
 		cells = append(cells, c)
 	}
 	b := s2tools.CellUnionToGeoJSON(cells)
-	js.Global().Set("data", string(b))
+	updateUIWithData(string(b))
+}
+
+func updateUIWithData(data string) {
+	js.Global().Set("data", data)
+	js.Global().Call("eval", "updateui()")
 }
 
 func registerCallbacks() {
