@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package geodata;
+
+import "google/protobuf/struct.proto";
+
+message Geometry {
+    Type type = 1;
+
+    repeated Geometry geometries = 2;
+
+    repeated double coordinates = 3;
+
+    enum Type {
+        POINT = 0;
+        POLYGON = 1;
+        MULTIPOLYGON = 2;
+        LINESTRING = 3;
+    }
+}
+
+
+message GeoData {
+    Geometry geometry = 1;
+
+    map<string, google.protobuf.Value> properties = 2;
+}
+

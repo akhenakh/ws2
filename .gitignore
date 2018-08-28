@@ -17,4 +17,4 @@
 
 \.wercker/
 
-test.wasm
+cmd/serve/serve
