@@ -19,6 +19,8 @@
    integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
    crossorigin=""></script>
 	<script src="https://unpkg.com/leaflet.pm@latest/dist/leaflet.pm.min.js"></script>
+	<script src ="togeojson.js"></script>
+	<script src ="leaflet.filelayer.js"></script>
 	<script src="wasm_exec.js"></script>
 
 	<div class="container">
@@ -126,6 +128,10 @@
 		// add leaflet.pm controls to the map
 		mymap.pm.addControls(options);
 
+		// upload control
+		upload = L.Control.fileLayerLoad();
+		upload.addTo(mymap);
+		
 		// listen to when drawing mode gets enabled
 		mymap.on('pm:drawstart', function(e) {
 			console.log("started new", e.shape);
@@ -143,6 +149,19 @@
 			shapeLayer = e.layer;
 			geocell(JSON.stringify(e.layer.toGeoJSON()));
 		});
+
+		upload.loader.on('data:loaded', function (event) {
+			if (geoLayer != null) {
+				mymap.removeLayer(geoLayer);
+			}
+			if (shapeLayer != null) {
+				mymap.removeLayer(shapeLayer);
+			}
+			shapeLayer = event.layer;
+			geofeaturescell(JSON.stringify(event.layer.toGeoJSON()));
+			layerswitcher.addOverlay(event.layer, event.filename);
+   		});
+		
 	</script>
 </body>
 </html>

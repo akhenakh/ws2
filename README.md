@@ -12,3 +12,6 @@ make serve
 ```
 
 Or look at the [demo](https://akhenakh.github.io/ws2/)
+
+## License
+License is MIT, it includes som js components:  [Leaflet.FileLayer](https://github.com/makinacorpus/Leaflet.FileLayer) and [togeojson](https://github.com/mapbox/togeojson)
