@@ -28,8 +28,8 @@
 			<div class="col-md-2">
 				<div class="form-group">
 					<label for="minRange">Minimum Level</label>
-					<output name="minOutputName" id="minOutputId">2</output>
-					<input type="range" class="custom-range" min="1" max="30" value="2" id="minRange" oninput="minOutputId.value = minRange.value">
+					<output name="minOutputName" id="minOutputId">10</output>
+					<input type="range" class="custom-range" min="1" max="30" value="10" id="minRange" oninput="minOutputId.value = minRange.value">
 					
 					<label for="maxRange">Maximum Level</label>
 					<output name="maxOutputName" id="maxOutputId">20</output>
@@ -88,16 +88,13 @@
 		};
 
 		
-		var mymap = L.map('mapid').setView([51.505, -0.09], 13);
+		var mymap = L.map('mapid');
 		// create the tile layer with correct attribution
 		var osmUrl='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 		var osmAttrib='Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
 		var osm = new L.TileLayer(osmUrl, {minZoom: 2, maxZoom: 18, attribution: osmAttrib});		
-
-		// start the map in South-East England
-		mymap.setView(new L.LatLng(51.505, -0.09),9);
+		mymap.setView(new L.LatLng(48.862884, 2.343975), 11);
 		mymap.addLayer(osm);
-		L.marker([51.50915, -0.096112], { pmIgnore: true }).addTo(mymap);
 
 		// define toolbar options
 		var options = {
