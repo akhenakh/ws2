@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>S2</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+	integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+	crossorigin=""/>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet.pm@latest/dist/leaflet.pm.css" />
+	<style>
+		#mapid { height: 680px; }
+	</style>
+</head>
+
+<body>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap.native@2.0.15/dist/bootstrap-native-v4.min.js"></script>
+	<script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
+   integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
+   crossorigin=""></script>
+	<script src="https://unpkg.com/leaflet.pm@latest/dist/leaflet.pm.min.js"></script>
+	<script src="wasm_exec.js"></script>
+
+	<div class="container">
+
+		<div class="row">
+			<div class="col"><div id="mapid"></div></div>
+			<div class="col-md-2">
+				<div class="form-group">
+					<label for="minRange">Minimum Level</label>
+					<output name="minOutputName" id="minOutputId">2</output>
+					<input type="range" class="custom-range" min="1" max="30" value="2" id="minRange" oninput="minOutputId.value = minRange.value">
+					
+					<label for="maxRange">Maximum Level</label>
+					<output name="maxOutputName" id="maxOutputId">20</output>
+					<input type="range" class="custom-range" min="1" max="30" value="20" id="maxRange" oninput="maxOutputId.value = maxRange.value">
+
+					<label for="maxCellsRange">Maximum Cells</label>
+					<output name="maxCellsOutputName" id="maxCellsOutputId">600</output>
+					<input type="range" class="custom-range" min="1" max="600" value="600" id="maxCellsRange" oninput="maxCellsOutputId.value = maxCellsRange.value">
+
+				</div>
+				<button onClick="onClick()" id="runButton" disabled>Compute</button>
+			</div>
+		  </div>
+	</div>
+	
+	
+
+	<script>
+		function onClick() { 
+			d = JSON.parse(data); 
+			L.geoJSON(d, {
+				style: function(feature) {
+					return {color: "#ff0000"};
+       			}
+			}).addTo(mymap);
+		}
+
+		if (!WebAssembly.instantiateStreaming) { // polyfill
+			WebAssembly.instantiateStreaming = async (resp, importObject) => {
+				const source = await (await resp).arrayBuffer();
+				return await WebAssembly.instantiate(source, importObject);
+			};
+		}
+
+		const go = new Go();
+		let mod, inst;
+		WebAssembly.instantiateStreaming(fetch("ws2.wasm"), go.importObject).then(async (result) => {
+			mod = result.module;
+			inst = result.instance;
+			document.getElementById("runButton").disabled = false;
+			await go.run(inst)
+		});
+
+		async function run() {
+			console.clear();
+			await go.run(inst);
+			inst = await WebAssembly.instantiate(mod, go.importObject); // reset instance
+		}
+
+		var watched = {
+			mydata: "",
+			set data(x) {
+				this.mydata = x;
+				console.log("set data", x)
+			}
+		};
+
+		
+		var mymap = L.map('mapid').setView([51.505, -0.09], 13);
+		// create the tile layer with correct attribution
+		var osmUrl='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+		var osmAttrib='Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
+		var osm = new L.TileLayer(osmUrl, {minZoom: 2, maxZoom: 18, attribution: osmAttrib});		
+
+		// start the map in South-East England
+		mymap.setView(new L.LatLng(51.505, -0.09),9);
+		mymap.addLayer(osm);
+		L.marker([51.50915, -0.096112], { pmIgnore: true }).addTo(mymap);
+
+		// define toolbar options
+		var options = {
+			position: 'topleft', // toolbar position, options are 'topleft', 'topright', 'bottomleft', 'bottomright'
+			drawMarker: true, // adds button to draw markers
+			drawPolyline: true, // adds button to draw a polyline
+			drawRectangle: true, // adds button to draw a rectangle
+			drawPolygon: true, // adds button to draw a polygon
+			drawCircle: true, // adds button to draw a cricle
+			cutPolygon: false, // adds button to cut a hole in a polygon
+			editMode: false, // adds button to toggle edit mode for all layers
+			removalMode: false, // adds a button to remove layers
+		};
+
+		// add leaflet.pm controls to the map
+		mymap.pm.addControls(options);
+
+		// listen to when drawing mode gets enabled
+		mymap.on('pm:drawstart', function(e) {
+			console.log("started new", e.shape);
+		});
+
+		// listen to when a new layer is created
+		mymap.on('pm:create', function(e) {
+			console.log("calling geocell", e.shape);
+			geocell(JSON.stringify(e.layer.toGeoJSON()));
+		});
+	</script>
+</body>
+</html>
