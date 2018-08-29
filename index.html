@@ -76,6 +76,11 @@
 			}
 			gj = shapeLayer.toGeoJSON();
 			if (gj.type == "Feature") {
+				// check if it could be a circle
+				if (shapeLayer.options.radius !== undefined) {
+					circlecell(gj.geometry.coordinates[0], gj.geometry.coordinates[1], shapeLayer.options.radius);
+					return;
+				}
 				geocell(JSON.stringify(shapeLayer.toGeoJSON(gj)));
 			} else {
 				geofeaturescell(JSON.stringify(shapeLayer.toGeoJSON(gj)));
