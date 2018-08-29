@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"math"
 	"strconv"
 	"syscall/js"
 
@@ -10,6 +11,8 @@ import (
 	"github.com/golang/geo/s2"
 	"github.com/twpayne/go-geom/encoding/geojson"
 )
+
+const earthCircumferenceMeter = 40075017
 
 var document js.Value
 
@@ -57,6 +60,21 @@ func geoFeaturesJSONToCells(i []js.Value) {
 	}
 
 	jsonb := s2tools.CellUnionToGeoJSON(res)
+	updateUIWithData(string(jsonb))
+}
+
+func geoCircleToCells(i []js.Value) {
+	lng := js.ValueOf(i[0]).Float()
+	lat := js.ValueOf(i[1]).Float()
+	radius := js.ValueOf(i[2]).Float()
+
+	center := s2.PointFromLatLng(s2.LatLngFromDegrees(lat, lng))
+	cap := s2.CapFromCenterArea(center, s2RadialAreaMeters(radius))
+
+	minLevel, maxLevel, maxCells := getCoverParams()
+	coverer := &s2.RegionCoverer{MinLevel: minLevel, MaxLevel: maxLevel, MaxCells: maxCells}
+	cu := coverer.Covering(cap)
+	jsonb := s2tools.CellUnionToGeoJSON(cu)
 	updateUIWithData(string(jsonb))
 }
 
@@ -109,8 +127,14 @@ func updateUIWithData(data string) {
 
 func registerCallbacks() {
 	js.Global().Set("drawcells", js.NewCallback(drawCells))
+	js.Global().Set("circlecell", js.NewCallback(geoCircleToCells))
 	js.Global().Set("geocell", js.NewCallback(geoJSONToCells))
 	js.Global().Set("geofeaturescell", js.NewCallback(geoFeaturesJSONToCells))
+}
+
+func s2RadialAreaMeters(radius float64) float64 {
+	r := (radius / earthCircumferenceMeter) * math.Pi * 2
+	return math.Pi * r * r
 }
 
 func main() {
