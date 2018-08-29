@@ -11,7 +11,7 @@ You can run it from your computer:
 make serve
 ```
 
-Or look at the [demo](https://akhenakh.github.io/ws2/)
+Or look at the [demo](https://s2.inair.space)
 
 
 ## License
