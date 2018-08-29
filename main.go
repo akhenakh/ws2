@@ -33,7 +33,7 @@ func getCoverParams() (minLevel, maxLevel, maxCells int) {
 	}
 
 	maxCS := document.Call("getElementById", "maxCellsRange").Get("value").String()
-	maxLevel, err = strconv.Atoi(maxCS)
+	maxCells, err = strconv.Atoi(maxCS)
 	if err != nil {
 		println(err.Error())
 		return
