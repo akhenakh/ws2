@@ -40,7 +40,7 @@
 		<div class="row">
 			
 			<div class="col"><div id="mapid"></div></div>
-			<div class="col-md-2">
+			<div class="col-lg-2">
 				<div class="form-group">
 					<label for="minRange">Minimum Level</label>
 					<output name="minOutputName" id="minOutputId">1</output>
@@ -53,10 +53,16 @@
 					<label for="maxCellsRange">Maximum Cells</label>
 					<output name="maxCellsOutputName" id="maxCellsOutputId">600</output>
 					<input type="range" class="custom-range" min="1" max="600" value="600" id="maxCellsRange" oninput="maxCellsOutputId.value = maxCellsRange.value">
-
+					<button onClick="coverShape()" id="coverButton"  class="btn" disabled>Compute</button>
 				</div>
-				<button onClick="onClick()" id="runButton" disabled>Compute</button>
+				
+				<div class="form-group">
+					<textarea class="form-control" id="cells_input" rows="5"></textarea>
+					</div>
+				<button onClick="displayCells()" id="cellsButton" class="btn" disabled>Display Cells</button>
 			</div>
+
+
 		</div>
 		<div>
 			<span id="cell_count" class="badge badge-pill badge-primary">0</span>
@@ -72,11 +78,22 @@
 		var geoLayer = null;
 		var shapeLayer = null;
 		
-
-		function onClick() {
+		function displayCells() {
+			cinput = document.getElementById("cells_input").value;
+			clist = cinput.split(/[ ,]+/);
 			if (geoLayer != null) {
 				mymap.removeLayer(geoLayer);
 			}
+			if (shapeLayer != null) {
+				mymap.removeLayer(shapeLayer);
+			}
+			drawcells(...clist);
+		}
+		function coverShape() {
+			if (geoLayer != null) {
+				mymap.removeLayer(geoLayer);
+			}
+			
 			gj = shapeLayer.toGeoJSON();
 			if (gj.type == "Feature") {
 				// check if it could be a circle
@@ -102,7 +119,8 @@
 		WebAssembly.instantiateStreaming(fetch("ws2.wasm"), go.importObject).then(async (result) => {
 			mod = result.module;
 			inst = result.instance;
-			document.getElementById("runButton").disabled = false;
+			document.getElementById("coverButton").disabled = false;
+			document.getElementById("cellsButton").disabled = false;
 			await go.run(inst)
 		});
 
@@ -181,6 +199,7 @@
 					res.push(feature.properties.id);
 				},
 			}).addTo(mymap);
+			mymap.fitBounds(geoLayer.getBounds());
 			document.getElementById("cell_count").textContent = res.length;
 			document.getElementById("cell_list").innerHTML = res.join(", ");
 		}
