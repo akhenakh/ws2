@@ -122,7 +122,7 @@ func drawCells(i []js.Value) {
 
 func updateUIWithData(data string) {
 	js.Global().Set("data", data)
-	js.Global().Call("eval", "updateui()")
+	js.Global().Call("updateui")
 }
 
 func registerCallbacks() {
