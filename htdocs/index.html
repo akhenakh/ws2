@@ -58,6 +58,9 @@
 				<button onClick="onClick()" id="runButton" disabled>Compute</button>
 			</div>
 		</div>
+		<div>
+			<span id="cell_count" class="badge badge-pill badge-primary">0</span>
+		</div>
 		<div class="row" id="cell_list">
 
 		</div>
@@ -178,7 +181,7 @@
 					res.push(feature.properties.id);
 				},
 			}).addTo(mymap);
-
+			document.getElementById("cell_count").textContent = res.length;
 			document.getElementById("cell_list").innerHTML = res.join(", ");
 		}
 		
