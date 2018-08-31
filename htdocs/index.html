@@ -53,14 +53,14 @@
 					<label for="maxCellsRange">Maximum Cells</label>
 					<output name="maxCellsOutputName" id="maxCellsOutputId">600</output>
 					<input type="range" class="custom-range" min="1" max="600" value="600" id="maxCellsRange" oninput="maxCellsOutputId.value = maxCellsRange.value">
-					<button onClick="coverShape()" id="coverButton"  class="btn" disabled>Compute</button>
+					<button onClick="coverShape()" id="coverButton"  class="btn btn-secondary" disabled>Compute</button>
 				</div>
 				
 				<div class="form-group">
 					<label for="cells_input">Insert cells tokens</label>
 					<textarea class="form-control" id="cells_input" rows="5"></textarea>
 					</div>
-				<button onClick="displayCells()" id="cellsButton" class="btn" disabled>Display Cells</button>
+				<button onClick="displayCells()" id="cellsButton" class="btn btn-secondary" disabled>Display Cells</button>
 			</div>
 
 
