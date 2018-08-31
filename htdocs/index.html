@@ -57,6 +57,7 @@
 				</div>
 				
 				<div class="form-group">
+					<label for="cells_input">Insert cells tokens</label>
 					<textarea class="form-control" id="cells_input" rows="5"></textarea>
 					</div>
 				<button onClick="displayCells()" id="cellsButton" class="btn" disabled>Display Cells</button>
@@ -201,7 +202,7 @@
 			}).addTo(mymap);
 			mymap.fitBounds(geoLayer.getBounds());
 			document.getElementById("cell_count").textContent = res.length;
-			document.getElementById("cell_list").innerHTML = res.join(", ");
+			document.getElementById("cell_list").innerHTML = "<p><small>" + res.join(", ") + "</small></p>";
 		}
 		
 	</script>
