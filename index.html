@@ -67,18 +67,18 @@
 		</div>
 		<div>
 			<span id="cell_count" class="badge badge-pill badge-primary">0</span>
+			<a href='#' id='exportLink' style="visibility:hidden">Export Cells to GeoJSON</a>
 		</div>
 		<div class="row" id="cell_list">
 
 		</div>
 	</div>
 	
-	
 
 	<script>
 		var geoLayer = null;
 		var shapeLayer = null;
-		
+
 		function displayCells() {
 			cinput = document.getElementById("cells_input").value;
 			clist = cinput.split(/[ ,]+/);
@@ -151,6 +151,15 @@
 			editMode: false, // adds button to toggle edit mode for all layers
 			removalMode: false, // adds a button to remove layers
 		};
+		
+		document.getElementById('exportLink').onclick = function(e) {
+			if (geoLayer != null) {
+				var cellsJSON = geoLayer.toGeoJSON();
+				var data = 'text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(cellsJSON));
+				document.getElementById('exportLink').setAttribute('href', 'data:' + data);
+				document.getElementById('exportLink').setAttribute('download','cells.geojson');
+			}
+		}
 
 		// add leaflet.pm controls to the map
 		mymap.pm.addControls(options);
@@ -203,6 +212,9 @@
 			mymap.fitBounds(geoLayer.getBounds());
 			document.getElementById("cell_count").textContent = res.length;
 			document.getElementById("cell_list").innerHTML = "<p><small>" + res.join(", ") + "</small></p>";
+			if (res.length > 0 ) {
+				document.getElementById("exportLink").style.visibility = "visible";
+			}	
 		}
 		
 	</script>
