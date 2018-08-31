@@ -111,10 +111,20 @@ func computeFeatureCells(f *geojson.Feature) s2.CellUnion {
 }
 
 func drawCells(i []js.Value) {
-	var cells s2.CellUnion
+	un := make(map[s2.CellID]struct{})
 	for _, cs := range i {
-		c := s2.CellIDFromToken(js.ValueOf(cs).String())
-		cells = append(cells, c)
+		cs := js.ValueOf(cs).String()
+		if cs != "" {
+			c := s2.CellIDFromToken(cs)
+			un[c] = struct{}{}
+		}
+	}
+
+	cells := make(s2.CellUnion, len(un))
+	count := 0
+	for c, _ := range un {
+		cells[count] = c
+		count++
 	}
 	b := s2tools.CellUnionToGeoJSON(cells)
 	updateUIWithData(string(b))
