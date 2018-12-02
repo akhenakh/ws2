@@ -1,6 +1,8 @@
 package s2tools
 
 import (
+	"strconv"
+
 	"github.com/golang/geo/s2"
 	"github.com/twpayne/go-geom"
 	"github.com/twpayne/go-geom/encoding/geojson"
@@ -14,7 +16,8 @@ func CellUnionToGeoJSON(cu s2.CellUnion) []byte {
 		f := &geojson.Feature{}
 		f.Properties = make(map[string]interface{})
 		f.Properties["id"] = cid.ToToken()
-		f.Properties["uid"] = uint64(cid)
+		f.Properties["uid"] = strconv.FormatUint(uint64(cid), 10)
+		f.Properties["str"] = cid.String()
 		f.Properties["level"] = cid.Level()
 
 		c := s2.CellFromCellID(cid)

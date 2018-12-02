@@ -31,7 +31,7 @@ func ParseCellID(cs string) *s2.CellID {
 		return &c
 	}
 
-	id, err := strconv.Atoi(cs)
+	id, err := strconv.ParseUint(cs, 10, 64)
 	if err != nil {
 		return nil
 	}
