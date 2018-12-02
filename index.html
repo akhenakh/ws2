@@ -57,8 +57,8 @@
 				</div>
 				
 				<div class="form-group">
-					<label for="cells_input">Insert cells tokens</label>
-					<textarea class="form-control" id="cells_input" rows="5"></textarea>
+					<label for="cells_input">Insert cells IDs</label>
+					<textarea class="form-control" placeholder="47e665 or 2/0333030302 or 5180939472010739712" id="cells_input" rows="5"></textarea>
 					</div>
 				<button onClick="displayCells()" id="cellsButton" class="btn btn-secondary" disabled>Display Cells</button>
 			</div>
@@ -204,7 +204,7 @@
        			},
 				onEachFeature: function(feature, layer) {
 					if (feature.properties) {
-        				layer.bindPopup(feature.properties.id + "<br>" + feature.properties.uid + "<br>Level " + feature.properties.level);
+        				layer.bindPopup(feature.properties.id + "<br>" + feature.properties.uid +  "<br>" + feature.properties.str + "<br>Level " + feature.properties.level);
 					}
 					res.push(feature.properties.id);
 				},
