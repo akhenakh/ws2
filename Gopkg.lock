@@ -3,14 +3,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:210bead85aadc1e05a8557c90f5f3429f7e888f765cad9133f52d57eb91ac764"
+  digest = "1:12496cd3a4c03d9fbb4d038ede8ff59e777dc2619250a8719092ca58d47a6387"
   name = "github.com/akhenakh/oureadb"
   packages = [
     "index/geodata",
     "s2tools",
   ]
   pruneopts = "UT"
-  revision = "609ffecbe94413fbc575e147909d2f2045403190"
+  revision = "8d6b851523fcf2a384520d0156f6895e2615fcda"
 
 [[projects]]
   branch = "master"

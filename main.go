@@ -115,8 +115,11 @@ func drawCells(i []js.Value) {
 	for _, cs := range i {
 		cs := js.ValueOf(cs).String()
 		if cs != "" {
-			c := s2.CellIDFromToken(cs)
-			un[c] = struct{}{}
+			c := s2tools.ParseCellID(cs)
+			if c == nil {
+				continue
+			}
+			un[*c] = struct{}{}
 		}
 	}
 
