@@ -45,13 +45,13 @@ func getCoverParams() (minLevel, maxLevel, maxCells int) {
 	return minLevel, maxLevel, maxCells
 }
 
-func geoFeaturesJSONToCells(i []js.Value) {
+func geoFeaturesJSONToCells(this js.Value, i []js.Value) interface{} {
 	var fc geojson.FeatureCollection
 	b := js.ValueOf(i[0]).String()
 	err := json.Unmarshal([]byte(b), &fc)
 	if err != nil {
 		println(err.Error())
-		return
+		return nil
 	}
 	var res s2.CellUnion
 	for _, f := range fc.Features {
@@ -61,9 +61,10 @@ func geoFeaturesJSONToCells(i []js.Value) {
 
 	jsonb := s2tools.CellUnionToGeoJSON(res)
 	updateUIWithData(string(jsonb))
+	return nil
 }
 
-func geoCircleToCells(i []js.Value) {
+func geoCircleToCells(this js.Value, i []js.Value) interface{} {
 	lng := js.ValueOf(i[0]).Float()
 	lat := js.ValueOf(i[1]).Float()
 	radius := js.ValueOf(i[2]).Float()
@@ -76,19 +77,21 @@ func geoCircleToCells(i []js.Value) {
 	cu := coverer.Covering(cap)
 	jsonb := s2tools.CellUnionToGeoJSON(cu)
 	updateUIWithData(string(jsonb))
+	return nil
 }
 
-func geoJSONToCells(i []js.Value) {
+func geoJSONToCells(this js.Value, i []js.Value) interface{} {
 	var f geojson.Feature
 	b := js.ValueOf(i[0]).String()
 	err := json.Unmarshal([]byte(b), &f)
 	if err != nil {
 		println(err.Error())
-		return
+		return nil
 	}
 	cu := computeFeatureCells(&f)
 	jsonb := s2tools.CellUnionToGeoJSON(cu)
 	updateUIWithData(string(jsonb))
+	return nil
 }
 
 func computeFeatureCells(f *geojson.Feature) s2.CellUnion {
@@ -102,7 +105,7 @@ func computeFeatureCells(f *geojson.Feature) s2.CellUnion {
 	minLevel, maxLevel, maxCells := getCoverParams()
 	coverer := &s2.RegionCoverer{MinLevel: minLevel, MaxLevel: maxLevel, MaxCells: maxCells}
 
-	cu, err := geodata.GeoDataToCellUnion(gd, coverer)
+	cu, err := geodata.GeoDataToCoverCellUnion(gd, coverer)
 	if err != nil {
 		println(err)
 		return nil
@@ -110,7 +113,7 @@ func computeFeatureCells(f *geojson.Feature) s2.CellUnion {
 	return cu
 }
 
-func drawCells(i []js.Value) {
+func drawCells(this js.Value, i []js.Value) interface{} {
 	un := make(map[s2.CellID]struct{})
 	for _, cs := range i {
 		cs := js.ValueOf(cs).String()
@@ -131,6 +134,7 @@ func drawCells(i []js.Value) {
 	}
 	b := s2tools.CellUnionToGeoJSON(cells)
 	updateUIWithData(string(b))
+	return nil
 }
 
 func updateUIWithData(data string) {
@@ -139,10 +143,10 @@ func updateUIWithData(data string) {
 }
 
 func registerCallbacks() {
-	js.Global().Set("drawcells", js.NewCallback(drawCells))
-	js.Global().Set("circlecell", js.NewCallback(geoCircleToCells))
-	js.Global().Set("geocell", js.NewCallback(geoJSONToCells))
-	js.Global().Set("geofeaturescell", js.NewCallback(geoFeaturesJSONToCells))
+	js.Global().Set("drawcells", js.FuncOf(drawCells))
+	js.Global().Set("circlecell", js.FuncOf(geoCircleToCells))
+	js.Global().Set("geocell", js.FuncOf(geoJSONToCells))
+	js.Global().Set("geofeaturescell", js.FuncOf(geoFeaturesJSONToCells))
 }
 
 func s2RadialAreaMeters(radius float64) float64 {
