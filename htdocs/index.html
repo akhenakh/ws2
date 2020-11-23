@@ -17,15 +17,15 @@
 
 <body>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap.native@2.0.15/dist/bootstrap-native-v4.min.js"></script>
-	<script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
-   integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
+	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet-src.js"
+   integrity="sha512-I5Hd7FcJ9rZkH7uD01G3AjsuzFy3gqz7HIJvzFZGFt2mrCS4Piw9bYZvCgUE0aiJuiZFYIJIwpbNnDIM6ohTrg=="
    crossorigin=""></script>
 	<script src="https://unpkg.com/leaflet.pm@latest/dist/leaflet.pm.min.js"></script>
 	<script src="togeojson.js"></script>
 	<script src="leaflet.filelayer.js"></script>
 	<script src="wasm_exec.js"></script>
 
-	
+
 	<div class="container">
 		<div class="row justify-content-md-center">
 				<div class="col">
@@ -38,14 +38,14 @@
 
 		</div>
 		<div class="row">
-			
+
 			<div class="col"><div id="mapid"></div></div>
 			<div class="col-lg-2">
 				<div class="form-group">
 					<label for="minRange">Minimum Level</label>
 					<output name="minOutputName" id="minOutputId">1</output>
 					<input type="range" class="custom-range" min="1" max="30" value="1" id="minRange" oninput="minOutputId.value = minRange.value">
-					
+
 					<label for="maxRange">Maximum Level</label>
 					<output name="maxOutputName" id="maxOutputId">10</output>
 					<input type="range" class="custom-range" min="1" max="30" value="10" id="maxRange" oninput="maxOutputId.value = maxRange.value">
@@ -53,14 +53,14 @@
 					<label for="maxCellsRange">Maximum Cells</label>
 					<output name="maxCellsOutputName" id="maxCellsOutputId">600</output>
 					<input type="range" class="custom-range" min="1" max="600" value="600" id="maxCellsRange" oninput="maxCellsOutputId.value = maxCellsRange.value">
-					<button onClick="coverShape()" id="coverButton"  class="btn btn-secondary" disabled>Compute</button>
+					<button onClick="coverShape()" id="coverButton"  class="btn btn-secondary" >Cover</button>
 				</div>
-				
+
 				<div class="form-group">
 					<label for="cells_input">Insert cells IDs</label>
 					<textarea class="form-control" placeholder="47e665 or 2/0333030302 or 5180939472010739712" id="cells_input" rows="5"></textarea>
 					</div>
-				<button onClick="displayCells()" id="cellsButton" class="btn btn-secondary" disabled>Display Cells</button>
+				<button onclick="displayCells()" id="cellsButton" class="btn btn-secondary">Display Cells</button>
 			</div>
 
 
@@ -73,7 +73,7 @@
 
 		</div>
 	</div>
-	
+
 
 	<script>
 		var geoLayer = null;
@@ -91,10 +91,11 @@
 			drawcells(...clist);
 		}
 		function coverShape() {
+			console.log('coverShape.')
 			if (geoLayer != null) {
 				mymap.removeLayer(geoLayer);
 			}
-			
+
 			gj = shapeLayer.toGeoJSON();
 			if (gj.type == "Feature") {
 				// check if it could be a circle
@@ -105,7 +106,7 @@
 				geocell(JSON.stringify(shapeLayer.toGeoJSON(gj)));
 			} else {
 				geofeaturescell(JSON.stringify(shapeLayer.toGeoJSON(gj)));
-			}			
+			}
 		}
 
 		if (!WebAssembly.instantiateStreaming) { // polyfill
@@ -135,7 +136,7 @@
 		// create the tile layer with correct attribution
 		var osmUrl='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 		var osmAttrib='Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
-		var osm = new L.TileLayer(osmUrl, {minZoom: 2, maxZoom: 18, attribution: osmAttrib});		
+		var osm = new L.TileLayer(osmUrl, {minZoom: 2, maxZoom: 18, attribution: osmAttrib});
 		mymap.setView(new L.LatLng(48.862884, 2.343975), 11);
 		mymap.addLayer(osm);
 
@@ -151,7 +152,7 @@
 			editMode: false, // adds button to toggle edit mode for all layers
 			removalMode: false, // adds a button to remove layers
 		};
-		
+
 		document.getElementById('exportLink').onclick = function(e) {
 			if (geoLayer != null) {
 				var cellsJSON = geoLayer.toGeoJSON();
@@ -167,7 +168,7 @@
 		// upload control
 		upload = L.Control.fileLayerLoad();
 		upload.addTo(mymap);
-		
+
 		// listen to when drawing mode gets enabled
 		mymap.on('pm:drawstart', function(e) {
 			console.log("started new", e.shape);
@@ -196,7 +197,7 @@
    		});
 
 		var updateui = function() {
-			d = JSON.parse(data); 
+			d = JSON.parse(data);
 			var res = [];
 			geoLayer = L.geoJSON(d, {
 				style: function(feature) {
@@ -214,9 +215,9 @@
 			document.getElementById("cell_list").innerHTML = "<p><small>" + res.join(", ") + "</small></p>";
 			if (res.length > 0 ) {
 				document.getElementById("exportLink").style.visibility = "visible";
-			}	
+			}
 		}
-		
+
 	</script>
 </body>
 </html>
