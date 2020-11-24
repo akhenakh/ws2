@@ -4,10 +4,11 @@
 <head>
 	<meta charset="utf-8">
 	<title>S2</title>
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
-	integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
-	crossorigin=""/>
-	<link rel="stylesheet" href="https://unpkg.com/leaflet.pm@latest/dist/leaflet.pm.css" />
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+  integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+  crossorigin=""/>
+  	<link rel="stylesheet" href="https://unpkg.com/leaflet.pm@latest/dist/leaflet.pm.css" />
 	<style>
 		#mapid { height: 680px; }
 	</style>
@@ -17,10 +18,10 @@
 
 <body>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap.native@2.0.15/dist/bootstrap-native-v4.min.js"></script>
-	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet-src.js"
-   integrity="sha512-I5Hd7FcJ9rZkH7uD01G3AjsuzFy3gqz7HIJvzFZGFt2mrCS4Piw9bYZvCgUE0aiJuiZFYIJIwpbNnDIM6ohTrg=="
-   crossorigin=""></script>
-	<script src="https://unpkg.com/leaflet.pm@latest/dist/leaflet.pm.min.js"></script>
+	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+  integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+  crossorigin=""></script>
+  	<script src="https://unpkg.com/leaflet.pm@latest/dist/leaflet.pm.min.js"></script>
 	<script src="togeojson.js"></script>
 	<script src="leaflet.filelayer.js"></script>
 	<script src="wasm_exec.js"></script>
@@ -96,6 +97,8 @@
 				mymap.removeLayer(geoLayer);
 			}
 
+			console.log("la", shapeLayer.toGeoJSON());
+
 			gj = shapeLayer.toGeoJSON();
 			if (gj.type == "Feature") {
 				// check if it could be a circle
@@ -103,6 +106,8 @@
 					circlecell(gj.geometry.coordinates[0], gj.geometry.coordinates[1], shapeLayer.options.radius);
 					return;
 				}
+				console.log("ICI", JSON.stringify(shapeLayer.toGeoJSON(gj)));
+
 				geocell(JSON.stringify(shapeLayer.toGeoJSON(gj)));
 			} else {
 				geofeaturescell(JSON.stringify(shapeLayer.toGeoJSON(gj)));
@@ -118,12 +123,11 @@
 
 		const go = new Go();
 		let mod, inst;
-		WebAssembly.instantiateStreaming(fetch("ws2.wasm"), go.importObject).then(async (result) => {
-			mod = result.module;
+		WebAssembly.instantiateStreaming(fetch("ws2.wasm"), go.importObject).then(async (result) => {			mod = result.module;
 			inst = result.instance;
 			document.getElementById("coverButton").disabled = false;
 			document.getElementById("cellsButton").disabled = false;
-			await go.run(inst)
+			await go.run(inst);
 		});
 
 		async function run() {

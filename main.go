@@ -98,16 +98,16 @@ func computeFeatureCells(f *geojson.Feature) s2.CellUnion {
 	gd := &geodata.GeoData{}
 	err := geodata.GeoJSONFeatureToGeoData(f, gd)
 	if err != nil {
-		println(err)
+		println(err.Error())
 		return nil
 	}
 
 	minLevel, maxLevel, maxCells := getCoverParams()
 	coverer := &s2.RegionCoverer{MinLevel: minLevel, MaxLevel: maxLevel, MaxCells: maxCells}
 
-	cu, err := geodata.GeoDataToCoverCellUnion(gd, coverer)
+	cu, err := gd.Cover(coverer)
 	if err != nil {
-		println(err)
+		println("error in Cover", err.Error())
 		return nil
 	}
 	return cu
