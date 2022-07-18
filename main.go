@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"strconv"
 	"syscall/js"
@@ -20,7 +21,7 @@ func init() {
 	document = js.Global().Get("document")
 }
 
-func getCoverParams() (minLevel, maxLevel, maxCells int) {
+func getCoverParams() (minLevel, maxLevel, maxCells int, inside bool) {
 	minS := document.Call("getElementById", "minRange").Get("value").String()
 	minLevel, err := strconv.Atoi(minS)
 	if err != nil {
@@ -42,12 +43,18 @@ func getCoverParams() (minLevel, maxLevel, maxCells int) {
 		return
 	}
 
-	return minLevel, maxLevel, maxCells
+	coverCS := document.Call("getElementById", "icover").Get("checked").Bool()
+	if coverCS {
+		inside = true
+	}
+
+	return minLevel, maxLevel, maxCells, inside
 }
 
 func geoFeaturesJSONToCells(this js.Value, i []js.Value) interface{} {
 	var fc geojson.FeatureCollection
 	b := js.ValueOf(i[0]).String()
+
 	err := json.Unmarshal([]byte(b), &fc)
 	if err != nil {
 		println(err.Error())
@@ -55,11 +62,19 @@ func geoFeaturesJSONToCells(this js.Value, i []js.Value) interface{} {
 	}
 	var res s2.CellUnion
 	for _, f := range fc.Features {
-		cu := computeFeatureCells(f)
+		cu, err := computeFeatureCells(f)
+		if err != nil {
+			println("error computing cells", err)
+			return nil
+		}
 		res = append(res, cu...)
 	}
 
 	jsonb := s2tools.CellUnionToGeoJSON(res)
+	if len(jsonb) == 0 {
+		println("empty result")
+		return nil
+	}
 	updateUIWithData(string(jsonb))
 	return nil
 }
@@ -72,9 +87,14 @@ func geoCircleToCells(this js.Value, i []js.Value) interface{} {
 	center := s2.PointFromLatLng(s2.LatLngFromDegrees(lat, lng))
 	cap := s2.CapFromCenterArea(center, s2RadialAreaMeters(radius))
 
-	minLevel, maxLevel, maxCells := getCoverParams()
+	minLevel, maxLevel, maxCells, inside := getCoverParams()
 	coverer := &s2.RegionCoverer{MinLevel: minLevel, MaxLevel: maxLevel, MaxCells: maxCells}
-	cu := coverer.Covering(cap)
+	var cu s2.CellUnion
+	if inside {
+		cu = coverer.InteriorCovering(cap)
+	} else {
+		cu = coverer.Covering(cap)
+	}
 	jsonb := s2tools.CellUnionToGeoJSON(cu)
 	updateUIWithData(string(jsonb))
 	return nil
@@ -83,34 +103,53 @@ func geoCircleToCells(this js.Value, i []js.Value) interface{} {
 func geoJSONToCells(this js.Value, i []js.Value) interface{} {
 	var f geojson.Feature
 	b := js.ValueOf(i[0]).String()
+
 	err := json.Unmarshal([]byte(b), &f)
 	if err != nil {
 		println(err.Error())
 		return nil
 	}
-	cu := computeFeatureCells(&f)
+	cu, err := computeFeatureCells(&f)
+	if err != nil {
+		println("error computing cells", err)
+		return nil
+	}
 	jsonb := s2tools.CellUnionToGeoJSON(cu)
+	if len(jsonb) == 0 {
+		println("can't generate cells")
+		return nil
+	}
+
 	updateUIWithData(string(jsonb))
 	return nil
 }
 
-func computeFeatureCells(f *geojson.Feature) s2.CellUnion {
+func computeFeatureCells(f *geojson.Feature) (s2.CellUnion, error) {
 	gd := &geodata.GeoData{}
 	err := geodata.GeoJSONFeatureToGeoData(f, gd)
 	if err != nil {
-		println(err.Error())
-		return nil
+		return nil, err
 	}
 
-	minLevel, maxLevel, maxCells := getCoverParams()
+	minLevel, maxLevel, maxCells, insideCover := getCoverParams()
 	coverer := &s2.RegionCoverer{MinLevel: minLevel, MaxLevel: maxLevel, MaxCells: maxCells}
 
-	cu, err := gd.Cover(coverer)
-	if err != nil {
-		println("error in Cover", err.Error())
-		return nil
+	var cu s2.CellUnion
+	if insideCover {
+		icu, err := gd.InteriorCover(coverer)
+		if err != nil {
+			return nil, fmt.Errorf("error in Interior Cover %w", err)
+		}
+		cu = icu
+	} else {
+		icu, err := gd.Cover(coverer)
+		if err != nil {
+			return nil, fmt.Errorf("error in Exterior Cover %w", err)
+		}
+		cu = icu
 	}
-	return cu
+
+	return cu, nil
 }
 
 func drawCells(this js.Value, i []js.Value) interface{} {
@@ -128,7 +167,7 @@ func drawCells(this js.Value, i []js.Value) interface{} {
 
 	cells := make(s2.CellUnion, len(un))
 	count := 0
-	for c, _ := range un {
+	for c := range un {
 		cells[count] = c
 		count++
 	}

@@ -54,6 +54,10 @@
 					<label for="maxCellsRange">Maximum Cells</label>
 					<output name="maxCellsOutputName" id="maxCellsOutputId">600</output>
 					<input type="range" class="custom-range" min="1" max="600" value="600" id="maxCellsRange" oninput="maxCellsOutputId.value = maxCellsRange.value">
+					<input type="radio" id="icover" name="cover" value="in">
+					<label for="icover">Inside</label>
+					<input type="radio" id="ocover" name="cover" value="out" checked>
+					<label for="ocover">Outside</label><br>
 					<button onClick="coverShape()" id="coverButton"  class="btn btn-secondary" >Cover</button>
 				</div>
 
@@ -92,12 +96,18 @@
 			drawcells(...clist);
 		}
 		function coverShape() {
-			console.log('coverShape.')
 			if (geoLayer != null) {
 				mymap.removeLayer(geoLayer);
 			}
-
-			console.log("la", shapeLayer.toGeoJSON());
+			
+			const radioButtons = document.querySelectorAll('input[name="cover"]');
+			let converType; 
+			for (const radioButton of radioButtons) {
+                if (radioButton.checked) {
+                    converType = radioButton.value;
+                    break;
+                }
+            }
 
 			gj = shapeLayer.toGeoJSON();
 			if (gj.type == "Feature") {
@@ -106,7 +116,6 @@
 					circlecell(gj.geometry.coordinates[0], gj.geometry.coordinates[1], shapeLayer.options.radius);
 					return;
 				}
-				console.log("ICI", JSON.stringify(shapeLayer.toGeoJSON(gj)));
 
 				geocell(JSON.stringify(shapeLayer.toGeoJSON(gj)));
 			} else {
@@ -122,13 +131,12 @@
 		}
 
 		const go = new Go();
-		let mod, inst;
-		WebAssembly.instantiateStreaming(fetch("ws2.wasm"), go.importObject).then(async (result) => {			mod = result.module;
-			inst = result.instance;
+		WebAssembly.instantiateStreaming(fetch("ws2.wasm"), go.importObject).then((result) => {
+			go.run(result.instance);
 			document.getElementById("coverButton").disabled = false;
 			document.getElementById("cellsButton").disabled = false;
-			await go.run(inst);
 		});
+			
 
 		async function run() {
 			console.clear();
