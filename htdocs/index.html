@@ -1,4 +1,5 @@
 <!doctype html>
+
 <html>
 
 <head>
@@ -144,7 +145,10 @@
 			inst = await WebAssembly.instantiate(mod, go.importObject); // reset instance
 		}
 
-		var mymap = L.map('mapid');
+		var mymap = L.map('mapid', {
+		  worldCopyJump: true  // Allows continuous panning across dateline
+		});
+
 		// create the tile layer with correct attribution
 		var osmUrl='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 		var osmAttrib='Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';

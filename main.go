@@ -176,8 +176,90 @@ func drawCells(this js.Value, i []js.Value) interface{} {
 	return nil
 }
 
+type FeatureCollection struct {
+	Type     string    `json:"type"`
+	Features []Feature `json:"features"`
+}
+
+type Feature struct {
+	Type       string                 `json:"type"`
+	Geometry   Geometry               `json:"geometry"`
+	Properties map[string]interface{} `json:"properties"`
+}
+
+type Geometry struct {
+	Type        string          `json:"type"`
+	Coordinates json.RawMessage `json:"coordinates"`
+}
+
+func normalizeGeoJSON(data []byte) []byte {
+	var fc FeatureCollection
+	if err := json.Unmarshal(data, &fc); err != nil {
+		return data
+	}
+
+	for i := range fc.Features {
+		if fc.Features[i].Geometry.Type == "Polygon" {
+			var coords [][][]float64
+			if err := json.Unmarshal(fc.Features[i].Geometry.Coordinates, &coords); err != nil {
+				continue
+			}
+
+			for j := range coords {
+				coords[j] = normalizeRing(coords[j])
+			}
+
+			newCoords, _ := json.Marshal(coords)
+			fc.Features[i].Geometry.Coordinates = newCoords
+		}
+	}
+
+	result, _ := json.Marshal(fc)
+	return result
+}
+
+func normalizeRing(ring [][]float64) [][]float64 {
+	if len(ring) < 2 {
+		return ring
+	}
+
+	// Determine which side of antimeridian the majority of points are on
+	eastCount := 0
+	westCount := 0
+	for _, coord := range ring {
+		lon := coord[0]
+		if lon < -90 || (lon >= 0 && lon < 90) {
+			eastCount++
+		} else {
+			westCount++
+		}
+	}
+
+	// Normalize all coordinates to the majority side
+	for i := range ring {
+		lon := ring[i][0]
+		if eastCount >= westCount {
+			// Keep in -180 to 180 range, convert +180 to -180
+			if lon > 180 {
+				ring[i][0] = lon - 360
+			} else if lon == 180 {
+				ring[i][0] = -180
+			}
+		} else {
+			// Keep in 0 to 360 range, convert -180 to +180
+			if lon < -180 {
+				ring[i][0] = lon + 360
+			} else if lon == -180 {
+				ring[i][0] = 180
+			}
+		}
+	}
+	return ring
+}
+
 func updateUIWithData(data string) {
-	js.Global().Set("data", data)
+	jsonb := normalizeGeoJSON([]byte(data))
+	js.Global().Set("data", string(jsonb))
 	js.Global().Call("updateui")
 }
 
